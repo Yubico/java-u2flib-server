@@ -9,9 +9,9 @@
 
 package com.yubico.u2f;
 
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.codec.binary.Hex;
+import com.google.common.io.BaseEncoding;
+import com.google.common.io.ByteArrayDataOutput;
+import com.yubico.u2f.data.messages.key.util.CertificateParser;
 import org.bouncycastle.asn1.sec.SECNamedCurves;
 import org.bouncycastle.asn1.x9.X9ECParameters;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -20,12 +20,10 @@ import org.bouncycastle.jce.spec.ECPrivateKeySpec;
 import org.bouncycastle.jce.spec.ECPublicKeySpec;
 import org.bouncycastle.math.ec.ECPoint;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Scanner;
@@ -36,31 +34,21 @@ public class TestUtils {
         Security.addProvider(new BouncyCastleProvider());
     }
 
-    public static byte[] parseHex(String hexEncoded) {
-        try {
-            return Hex.decodeHex(hexEncoded.toCharArray());
-        } catch (DecoderException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    public static final BaseEncoding HEX = BaseEncoding.base16().lowerCase();
+    public static final BaseEncoding BASE64 = BaseEncoding.base64();
 
     public static X509Certificate fetchCertificate(InputStream resourceAsStream) {
         Scanner in = new Scanner(resourceAsStream);
         String base64String = in.nextLine();
-        return parseCertificate(Base64.decodeBase64(base64String));
+        return parseCertificate(BASE64.decode(base64String));
     }
 
     public static X509Certificate parseCertificate(byte[] encodedDerCertificate) {
         try {
-            return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(
-                    new ByteArrayInputStream(encodedDerCertificate));
+            return CertificateParser.parseDer(encodedDerCertificate);
         } catch (CertificateException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public static X509Certificate parseCertificate(String encodedDerCertificateHex) {
-        return parseCertificate(parseHex(encodedDerCertificateHex));
     }
 
     public static PrivateKey parsePrivateKey(InputStream is) {
@@ -98,5 +86,25 @@ public class TestUtils {
         } catch (InvalidKeySpecException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static byte[] serialize(Object o) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ObjectOutputStream objectOut = new ObjectOutputStream(out);
+        objectOut.writeObject(o);
+        objectOut.close();
+        return out.toByteArray();
+    }
+
+    public static <T> T deserialize(byte[] serialized) throws IOException, ClassNotFoundException {
+        ByteArrayInputStream is = new ByteArrayInputStream(serialized);
+        ObjectInputStream objectIn = new ObjectInputStream(is);
+        T object = (T) objectIn.readObject();
+        objectIn.close();
+        return  object;
+    }
+
+    public static <T> T clone(T input) throws IOException, ClassNotFoundException {
+        return deserialize(serialize(input));
     }
 }

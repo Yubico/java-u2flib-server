@@ -1,18 +1,19 @@
 package com.yubico.u2f.data.messages.key;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
-import com.google.gson.Gson;
-import com.yubico.u2f.U2F;
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
+import com.yubico.u2f.U2fPrimitives;
 import com.yubico.u2f.crypto.BouncyCastleCrypto;
 import com.yubico.u2f.data.DeviceRegistration;
 import com.yubico.u2f.data.messages.AuthenticateRequest;
 import com.yubico.u2f.data.messages.AuthenticateResponse;
 import com.yubico.u2f.data.messages.RegisterRequest;
 import com.yubico.u2f.data.messages.RegisterResponse;
-import com.yubico.u2f.data.messages.key.util.ByteSink;
-import com.yubico.u2f.exceptions.U2fException;
+import com.yubico.u2f.data.messages.key.util.U2fB64Encoding;
+import com.yubico.u2f.exceptions.U2fBadInputException;
 import com.yubico.u2f.softkey.SoftKey;
-import org.apache.commons.codec.binary.Base64;
 
 import java.nio.ByteBuffer;
 import java.security.cert.CertificateEncodingException;
@@ -26,16 +27,16 @@ public class Client {
     public static final String APP_ID = "my-app";
 
     private final BouncyCastleCrypto crypto = new BouncyCastleCrypto();
-    private final Gson gson = new Gson();
     private final SoftKey key;
-    private final U2F u2f = new U2F();
+    private final U2fPrimitives u2f = new U2fPrimitives();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public Client(SoftKey key) {
         this.key = key;
     }
 
     public static byte[] encodeRegisterResponse(RawRegisterResponse rawRegisterResponse)
-            throws U2fException {
+            throws U2fBadInputException {
         byte[] userPublicKey = rawRegisterResponse.userPublicKey;
         byte[] keyHandle = rawRegisterResponse.keyHandle;
         X509Certificate attestationCertificate = rawRegisterResponse.attestationCertificate;
@@ -45,11 +46,11 @@ public class Client {
         try {
             attestationCertificateBytes = attestationCertificate.getEncoded();
         } catch (CertificateEncodingException e) {
-            throw new U2fException("Error when encoding attestation certificate.", e);
+            throw new U2fBadInputException("Error when encoding attestation certificate.", e);
         }
 
         if (keyHandle.length > 255) {
-            throw new U2fException("keyHandle length cannot be longer than 255 bytes!");
+            throw new U2fBadInputException("keyHandle length cannot be longer than 255 bytes!");
         }
 
         byte[] result = new byte[1 + userPublicKey.length + 1 + keyHandle.length
@@ -64,10 +65,10 @@ public class Client {
         return result;
     }
 
-    public static RegisterResponse encodeTokenRegistrationResponse(String clientDataJson, RawRegisterResponse registerResponse) throws U2fException {
+    public static RegisterResponse encodeTokenRegistrationResponse(String clientDataJson, RawRegisterResponse registerResponse) throws U2fBadInputException {
         byte[] rawRegisterResponse = Client.encodeRegisterResponse(registerResponse);
-        String rawRegisterResponseBase64 = Base64.encodeBase64URLSafeString(rawRegisterResponse);
-        String clientDataBase64 = Base64.encodeBase64URLSafeString(clientDataJson.getBytes());
+        String rawRegisterResponseBase64 = U2fB64Encoding.encode(rawRegisterResponse);
+        String clientDataBase64 = U2fB64Encoding.encode(clientDataJson.getBytes());
         return new RegisterResponse(rawRegisterResponseBase64, clientDataBase64);
     }
 
@@ -78,7 +79,7 @@ public class Client {
         clientData.put("typ", "navigator.id.finishEnrollment");
         clientData.put("challenge", registerRequest.getChallenge());
         clientData.put("origin", "http://example.com");
-        String clientDataJson = gson.toJson(clientData);
+        String clientDataJson = objectMapper.writeValueAsString(clientData);
 
         byte[] clientParam = crypto.hash(clientDataJson);
         byte[] appParam = crypto.hash(registerRequest.getAppId());
@@ -96,25 +97,24 @@ public class Client {
         clientData.put("typ", "navigator.id.getAssertion");
         clientData.put("challenge", startedAuthentication.getChallenge());
         clientData.put("origin", "http://example.com");
-        String clientDataJson = gson.toJson(clientData);
+        String clientDataJson = objectMapper.writeValueAsString(clientData);
 
 
         byte[] clientParam = crypto.hash(clientDataJson);
         byte[] appParam = crypto.hash(startedAuthentication.getAppId());
-        com.yubico.u2f.softkey.messages.AuthenticateRequest authenticateRequest = new com.yubico.u2f.softkey.messages.AuthenticateRequest((byte) 0x01, clientParam, appParam, Base64.decodeBase64(registeredDevice.getKeyHandle()));
+        com.yubico.u2f.softkey.messages.AuthenticateRequest authenticateRequest = new com.yubico.u2f.softkey.messages.AuthenticateRequest((byte) 0x01, clientParam, appParam, U2fB64Encoding.decode(registeredDevice.getKeyHandle()));
 
         RawAuthenticateResponse rawAuthenticateResponse = key.authenticate(authenticateRequest);
 
-        String clientDataBase64 = Base64.encodeBase64URLSafeString(clientDataJson.getBytes());
-        byte[] authData = ByteSink.create()
-                .put(rawAuthenticateResponse.getUserPresence())
-                .putInt(rawAuthenticateResponse.getCounter())
-                .put(rawAuthenticateResponse.getSignature())
-                .toByteArray();
+        String clientDataBase64 = U2fB64Encoding.encode(clientDataJson.getBytes());
+        ByteArrayDataOutput authData = ByteStreams.newDataOutput();
+        authData.write(rawAuthenticateResponse.getUserPresence());
+        authData.writeInt((int) rawAuthenticateResponse.getCounter());
+        authData.write(rawAuthenticateResponse.getSignature());
 
         return new AuthenticateResponse(
                 clientDataBase64,
-                Base64.encodeBase64URLSafeString(authData),
+                U2fB64Encoding.encode(authData.toByteArray()),
                 startedAuthentication.getKeyHandle()
         );
     }

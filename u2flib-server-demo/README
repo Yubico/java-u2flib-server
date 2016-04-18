@@ -1,16 +1,32 @@
 == u2flib-server-demo
-A simple self-contained demo server. The central part is the
+A simple self-contained demo server supporting multiple devices per user. The central part is the
 https://github.com/Yubico/java-u2flib-server/blob/master/u2flib-server-demo/src/main/java/demo/Resource.java[Resource]
 class.
 
-=== Usage
+=== 1. Clone
+ git clone https://github.com/Yubico/java-u2flib-server.git
+
+=== 2. Compile
+Go to the demo server directory:
+ 
+ cd java-u2flib-server/u2flib-server-demo
+
 Compile using `mvn clean install` and then run using
-`java -jar target/java-u2flib-server-demo.jar server config.yml`.
+`java -jar target/u2flib-server-demo.jar server config.yml`.
 
-The demo server is configured to use _example.com:8080_ as _AppID_.
-This mean that you must add the following to your hosts file:
-
-	127.0.0.1 example.com
-
+=== 3. Run
 Then point a U2F-compatible web browser (e.g. Chrome) to
-link:http://example.com:8080/startRegistration[example.com:8080/registerIndex].
+link:https://localhost:8443/assets/registerIndex.html[https://localhost:8443/assets/registerIndex.html].
+
+NOTE: Since U2F requires a HTTPS connection, this demo server uses a dummy certificate.
+This will cause Chrome to show a warning, which it is safe to bypass.
+
+=== Troubleshooting
+[qanda]
+.Q&A
+Why do I get https://developers.yubico.com/U2F/Libraries/Client_error_codes.html[error code 2]?::
+    You are accessing the server using a URL that does not match the server's
+	https://developers.yubico.com/U2F/App_ID.html[App ID].
+	The App ID is set to `https://localhost:8443` by default, but you can change this in the
+    https://github.com/Yubico/java-u2flib-server/blob/master/u2flib-server-demo/src/main/java/demo/Resource.java[Resource]
+    class.

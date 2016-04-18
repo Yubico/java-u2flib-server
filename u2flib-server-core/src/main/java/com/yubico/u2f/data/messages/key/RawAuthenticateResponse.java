@@ -10,12 +10,13 @@
 package com.yubico.u2f.data.messages.key;
 
 import com.google.common.base.Objects;
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
 import com.yubico.u2f.crypto.BouncyCastleCrypto;
 import com.yubico.u2f.crypto.Crypto;
 import com.yubico.u2f.data.messages.key.util.ByteInputStream;
-import com.yubico.u2f.data.messages.key.util.ByteSink;
-import com.yubico.u2f.exceptions.U2fException;
-import org.apache.commons.codec.binary.Base64;
+import com.yubico.u2f.data.messages.key.util.U2fB64Encoding;
+import com.yubico.u2f.exceptions.U2fBadInputException;
 
 import java.util.Arrays;
 
@@ -27,15 +28,15 @@ public class RawAuthenticateResponse {
     public static final byte USER_PRESENT_FLAG = 0x01;
 
     private final byte userPresence;
-    private final int counter;
+    private final long counter;
     private final byte[] signature;
     private final Crypto crypto;
 
-    public RawAuthenticateResponse(byte userPresence, int counter, byte[] signature) {
+    public RawAuthenticateResponse(byte userPresence, long counter, byte[] signature) {
         this(userPresence, counter, signature, new BouncyCastleCrypto());
     }
 
-    public RawAuthenticateResponse(byte userPresence, int counter, byte[] signature, Crypto crypto) {
+    public RawAuthenticateResponse(byte userPresence, long counter, byte[] signature, Crypto crypto) {
         this.userPresence = userPresence;
         this.counter = counter;
         this.signature = signature;
@@ -43,7 +44,7 @@ public class RawAuthenticateResponse {
     }
 
     public static RawAuthenticateResponse fromBase64(String rawDataBase64, Crypto crypto) {
-        ByteInputStream bytes = new ByteInputStream(Base64.decodeBase64(rawDataBase64));
+        ByteInputStream bytes = new ByteInputStream(U2fB64Encoding.decode(rawDataBase64));
         return new RawAuthenticateResponse(
                 bytes.readSigned(),
                 bytes.readInteger(),
@@ -52,7 +53,7 @@ public class RawAuthenticateResponse {
         );
     }
 
-    public void checkSignature(String appId, String clientData, byte[] publicKey) throws U2fException {
+    public void checkSignature(String appId, String clientData, byte[] publicKey) throws U2fBadInputException {
         byte[] signedBytes = packBytesToSign(
                 crypto.hash(appId),
                 userPresence,
@@ -66,13 +67,13 @@ public class RawAuthenticateResponse {
         );
     }
 
-    public static byte[] packBytesToSign(byte[] appIdHash, byte userPresence, int counter, byte[] challengeHash) {
-        return ByteSink.create()
-                .put(appIdHash)
-                .put(userPresence)
-                .putInt(counter)
-                .put(challengeHash)
-                .toByteArray();
+    public static byte[] packBytesToSign(byte[] appIdHash, byte userPresence, long counter, byte[] challengeHash) {
+        ByteArrayDataOutput encoded = ByteStreams.newDataOutput();
+        encoded.write(appIdHash);
+        encoded.write(userPresence);
+        encoded.writeInt((int) counter);
+        encoded.write(challengeHash);
+        return encoded.toByteArray();
     }
 
     /**
@@ -90,7 +91,7 @@ public class RawAuthenticateResponse {
      * This is the big-endian representation of a counter value that the U2F device
      * increments every time it performs an authentication operation.
      */
-    public int getCounter() {
+    public long getCounter() {
         return counter;
     }
 
@@ -116,9 +117,9 @@ public class RawAuthenticateResponse {
                 && Objects.equal(userPresence, other.userPresence);
     }
 
-    public void checkUserPresence() throws U2fException {
+    public void checkUserPresence() throws U2fBadInputException {
         if (userPresence != USER_PRESENT_FLAG) {
-            throw new U2fException("User presence invalid during authentication");
+            throw new U2fBadInputException("User presence invalid during authentication");
         }
     }
 }

@@ -2,7 +2,7 @@
 <head>
 <title>Java U2F Demo</title>
 
-<script src="chrome-extension://pfboblefjcgdjicmnffhdgionmgcdmne/u2f-api.js"></script>
+<script src="/assets/u2f-api.js"></script>
 
 <script>
 var request = ${data};
@@ -23,10 +23,9 @@ setTimeout(function() {
 
 </head>
     <body>
-    <p>Enter a username and then touch your U2F token.</p>
+    <p>Touch your U2F token.</p>
         <form method="POST" action="finishRegistration" id="form" onsubmit="return false;">
-            <label for="username">Username</label>
-            <input name="username" id="username" autofocus />
+            <input type="hidden" name="username" value="${username}"/>
             <input type="hidden" name="tokenResponse" id="tokenResponse"/>
         </form>
     </body>

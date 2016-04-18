@@ -9,26 +9,31 @@
 
 package com.yubico.u2f.data.messages;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
-import com.yubico.u2f.U2F;
-import com.yubico.u2f.data.messages.json.JsonObject;
+import com.yubico.u2f.U2fPrimitives;
+import com.yubico.u2f.data.messages.json.JsonSerializable;
 import com.yubico.u2f.data.messages.json.Persistable;
-import com.yubico.u2f.exceptions.U2fException;
-
-import java.io.Serializable;
+import com.yubico.u2f.exceptions.U2fBadInputException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class RegisterRequest extends JsonObject implements Serializable, Persistable {
+public class RegisterRequest extends JsonSerializable implements Persistable {
+
+    private static final long serialVersionUID = 24349091760814188L;
+
     /**
      * Version of the protocol that the to-be-registered U2F token must speak. For
      * the version of the protocol described herein, must be "U2F_V2"
      */
-    private final String version = U2F.U2F_VERSION;
+    @JsonProperty
+    private final String version = U2fPrimitives.U2F_VERSION;
 
     /**
      * The websafe-base64-encoded challenge.
      */
+    @JsonProperty
     private final String challenge;
 
     public String getChallenge() {
@@ -41,14 +46,11 @@ public class RegisterRequest extends JsonObject implements Serializable, Persist
      * application id. The browser enforces that the calling origin belongs to the
      * application identified by the application id.
      */
+    @JsonProperty
     private final String appId;
 
-    private RegisterRequest() {
-        challenge = null;
-        appId = null; // Gson requires a no-args constructor.
-    }
-
-    public RegisterRequest(String challenge, String appId) {
+    @JsonCreator
+    public RegisterRequest(@JsonProperty("challenge") String challenge, @JsonProperty("appId") String appId) {
         this.challenge = checkNotNull(challenge);
         this.appId = checkNotNull(appId);
     }
@@ -58,7 +60,7 @@ public class RegisterRequest extends JsonObject implements Serializable, Persist
     }
 
     @Override
-    public String getKey() {
+    public String getRequestId() {
         return getChallenge();
     }
 
@@ -77,7 +79,7 @@ public class RegisterRequest extends JsonObject implements Serializable, Persist
                 && Objects.equal(version, other.version);
     }
 
-    public static RegisterRequest fromJson(String json) {
-        return GSON.fromJson(json, RegisterRequest.class);
+    public static RegisterRequest fromJson(String json) throws U2fBadInputException {
+        return fromJson(json, RegisterRequest.class);
     }
 }

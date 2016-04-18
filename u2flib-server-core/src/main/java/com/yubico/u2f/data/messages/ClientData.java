@@ -1,19 +1,16 @@
 package com.yubico.u2f.data.messages;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.yubico.u2f.exceptions.InvalidFacetException;
-import com.yubico.u2f.exceptions.U2fException;
-import org.apache.commons.codec.binary.Base64;
+import com.yubico.u2f.data.messages.key.util.U2fB64Encoding;
+import com.yubico.u2f.exceptions.U2fBadInputException;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Set;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ClientData {
 
@@ -25,28 +22,22 @@ public class ClientData {
     private final String challenge;
     private final String origin;
     private final String rawClientData;
+    private final JsonNode data;
 
     public String asJson() {
         return rawClientData;
     }
 
-    public ClientData(String clientData) throws U2fException {
-
-        this.rawClientData = new String(Base64.decodeBase64(clientData));
-        JsonElement clientDataAsElement = new JsonParser().parse(rawClientData);
-        if (!clientDataAsElement.isJsonObject()) {
-            throw new U2fException("ClientData has wrong format");
+    public ClientData(String clientData) throws U2fBadInputException {
+        rawClientData = new String(U2fB64Encoding.decode(clientData));
+        try {
+            data = new ObjectMapper().readTree(rawClientData);
+            type = getString(TYPE_PARAM);
+            challenge = getString(CHALLENGE_PARAM);
+            origin = getString(ORIGIN_PARAM);
+        } catch (IOException e) {
+            throw new U2fBadInputException("Malformed ClientData", e);
         }
-        JsonObject jsonObject = clientDataAsElement.getAsJsonObject();
-        if (!jsonObject.has(TYPE_PARAM)) {
-            throw new U2fException("Bad clientData: missing 'typ' param");
-        }
-        this.type = jsonObject.get(TYPE_PARAM).getAsString();
-        if (!jsonObject.has(CHALLENGE_PARAM)) {
-            throw new U2fException("Bad clientData: missing 'challenge' param");
-        }
-        this.challenge = jsonObject.get(CHALLENGE_PARAM).getAsString();
-        this.origin = checkNotNull(jsonObject.get(ORIGIN_PARAM).getAsString());
     }
 
     @Override
@@ -58,26 +49,37 @@ public class ClientData {
         return challenge;
     }
 
-    public void checkContent(String type, String challenge, Optional<Set<String>> facets) throws U2fException {
+    public String getString(String key) {
+        return data.get(key).asText();
+    }
+
+    public void checkContent(String type, String challenge, Optional<Set<String>> facets) throws U2fBadInputException {
         if (!type.equals(this.type)) {
-            throw new U2fException("Bad clientData: bad type " + this.type);
+            throw new U2fBadInputException("Bad clientData: wrong type " + this.type);
         }
         if (!challenge.equals(this.challenge)) {
-            throw new U2fException("Wrong challenge signed in clientData");
+            throw new U2fBadInputException("Bad clientData: wrong challenge");
         }
         if (facets.isPresent()) {
-            verifyOrigin(origin, canonicalizeOrigins(facets.get()));
+            Set<String> allowedFacets = canonicalizeOrigins(facets.get());
+            String canonicalOrigin;
+            try {
+                canonicalOrigin = canonicalizeOrigin(origin);
+            } catch (RuntimeException e) {
+                throw new U2fBadInputException("Bad clientData: Malformed origin", e);
+            }
+            verifyOrigin(canonicalOrigin, allowedFacets);
         }
     }
 
-    private static void verifyOrigin(String origin, Set<String> allowedOrigins) throws InvalidFacetException {
-        if (!allowedOrigins.contains(canonicalizeOrigin(origin))) {
-            throw new InvalidFacetException(origin +
-                    " is not a recognized home origin for this backend");
+    private static void verifyOrigin(String origin, Set<String> allowedOrigins) throws U2fBadInputException {
+        if (!allowedOrigins.contains(origin)) {
+            throw new U2fBadInputException(origin +
+                    " is not a recognized facet for this application");
         }
     }
 
-    public static Set<String> canonicalizeOrigins(Set<String> origins) throws InvalidFacetException {
+    public static Set<String> canonicalizeOrigins(Set<String> origins) {
         ImmutableSet.Builder<String> result = ImmutableSet.builder();
         for (String origin : origins) {
             result.add(canonicalizeOrigin(origin));
@@ -85,7 +87,7 @@ public class ClientData {
         return result.build();
     }
 
-    public static String canonicalizeOrigin(String url) throws InvalidFacetException {
+    public static String canonicalizeOrigin(String url) {
         try {
             URI uri = new URI(url);
             if (uri.getAuthority() == null) {
@@ -93,7 +95,7 @@ public class ClientData {
             }
             return uri.getScheme() + "://" + uri.getAuthority();
         } catch (URISyntaxException e) {
-            throw new InvalidFacetException("specified bad origin", e);
+            throw new IllegalArgumentException("specified bad origin", e);
         }
     }
 }

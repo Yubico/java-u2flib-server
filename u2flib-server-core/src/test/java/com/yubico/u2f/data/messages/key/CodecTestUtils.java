@@ -9,37 +9,38 @@
 
 package com.yubico.u2f.data.messages.key;
 
-import com.yubico.u2f.data.messages.key.util.ByteSink;
-import com.yubico.u2f.exceptions.U2fException;
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
+import com.yubico.u2f.exceptions.U2fBadInputException;
 
 import java.security.cert.CertificateEncodingException;
 
 public class CodecTestUtils {
     public static byte[] encodeAuthenticateResponse(RawAuthenticateResponse rawAuthenticateResponse) {
-        return ByteSink.create()
-                .put(rawAuthenticateResponse.getUserPresence())
-                .putInt(rawAuthenticateResponse.getCounter())
-                .put(rawAuthenticateResponse.getSignature())
-                .toByteArray();
+        ByteArrayDataOutput encoded = ByteStreams.newDataOutput();
+        encoded.write(rawAuthenticateResponse.getUserPresence());
+        encoded.writeInt((int) rawAuthenticateResponse.getCounter());
+        encoded.write(rawAuthenticateResponse.getSignature());
+        return encoded.toByteArray();
     }
 
-    public static byte[] encodeRegisterResponse(RawRegisterResponse rawRegisterResponse) throws U2fException {
+    public static byte[] encodeRegisterResponse(RawRegisterResponse rawRegisterResponse) throws U2fBadInputException {
         byte[] keyHandle = rawRegisterResponse.keyHandle;
         if (keyHandle.length > 255) {
-            throw new U2fException("keyHandle length cannot be longer than 255 bytes!");
+            throw new U2fBadInputException("keyHandle length cannot be longer than 255 bytes!");
         }
 
         try {
-            return ByteSink.create()
-                    .put(RawRegisterResponse.REGISTRATION_RESERVED_BYTE_VALUE)
-                    .put(rawRegisterResponse.userPublicKey)
-                    .put((byte) keyHandle.length)
-                    .put(keyHandle)
-                    .put(rawRegisterResponse.attestationCertificate.getEncoded())
-                    .put(rawRegisterResponse.signature)
-                    .toByteArray();
+            ByteArrayDataOutput encoded = ByteStreams.newDataOutput();
+            encoded.write(RawRegisterResponse.REGISTRATION_RESERVED_BYTE_VALUE);
+            encoded.write(rawRegisterResponse.userPublicKey);
+            encoded.write((byte) keyHandle.length);
+            encoded.write(keyHandle);
+            encoded.write(rawRegisterResponse.attestationCertificate.getEncoded());
+            encoded.write(rawRegisterResponse.signature);
+            return encoded.toByteArray();
         } catch (CertificateEncodingException e) {
-            throw new U2fException("Error when encoding attestation certificate.", e);
+            throw new U2fBadInputException("Error when encoding attestation certificate.", e);
         }
     }
 }

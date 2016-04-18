@@ -1,54 +1,86 @@
 package com.yubico.u2f.data.messages;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.yubico.u2f.U2F;
+import com.yubico.u2f.U2fPrimitives;
 import com.yubico.u2f.crypto.ChallengeGenerator;
 import com.yubico.u2f.data.DeviceRegistration;
-import com.yubico.u2f.data.messages.json.JsonObject;
+import com.yubico.u2f.data.messages.json.JsonSerializable;
 import com.yubico.u2f.data.messages.json.Persistable;
-import com.yubico.u2f.exceptions.U2fException;
+import com.yubico.u2f.exceptions.NoEligibleDevicesException;
+import com.yubico.u2f.exceptions.U2fBadInputException;
 
 import java.util.List;
 
-/**
- * Created by dain on 11/11/14.
- */
-public class AuthenticateRequestData extends JsonObject implements Persistable {
+import static com.google.common.base.Preconditions.checkArgument;
+
+public class AuthenticateRequestData extends JsonSerializable implements Persistable {
+
+    private static final long serialVersionUID = 35378338769078256L;
+
+    @JsonProperty
     private final List<AuthenticateRequest> authenticateRequests;
 
-    public AuthenticateRequestData(String appId, Iterable<? extends DeviceRegistration> devices, U2F u2f, ChallengeGenerator challengeGenerator) {
+    @JsonCreator
+    private AuthenticateRequestData(@JsonProperty("authenticateRequests") List<AuthenticateRequest> authenticateRequests) {
+        this.authenticateRequests = authenticateRequests;
+    }
+
+    public AuthenticateRequestData(String appId, Iterable<? extends DeviceRegistration> devices, U2fPrimitives u2f, ChallengeGenerator challengeGenerator) throws U2fBadInputException, NoEligibleDevicesException {
         ImmutableList.Builder<AuthenticateRequest> requestBuilder = ImmutableList.builder();
         byte[] challenge = challengeGenerator.generateChallenge();
-        for(DeviceRegistration device : devices) {
-            requestBuilder.add(u2f.startAuthentication(appId, device, challenge));
+        for (DeviceRegistration device : devices) {
+            if(!device.isCompromised()) {
+                requestBuilder.add(u2f.startAuthentication(appId, device, challenge));
+            }
         }
-        this.authenticateRequests = requestBuilder.build();
+        authenticateRequests = requestBuilder.build();
+
+        if (authenticateRequests.isEmpty()) {
+            if(Iterables.isEmpty(devices)) {
+                throw new NoEligibleDevicesException(devices, "No devices registrered");
+            } else {
+                throw new NoEligibleDevicesException(devices, "All devices compromised");
+            }
+        }
     }
 
     public List<AuthenticateRequest> getAuthenticateRequests() {
         return ImmutableList.copyOf(authenticateRequests);
     }
 
-    public AuthenticateRequest getAuthenticateRequest(AuthenticateResponse response) throws U2fException {
-        if(!Objects.equal(getKey(), response.getKey())) {
-            throw new U2fException("Wrong request for response data");
-        }
-        for(AuthenticateRequest request : authenticateRequests) {
-            if(Objects.equal(request.getKeyHandle(), response.getKeyHandle())) {
+    public AuthenticateRequest getAuthenticateRequest(AuthenticateResponse response) throws U2fBadInputException {
+        checkArgument(Objects.equal(getRequestId(), response.getRequestId()), "Wrong request for response data");
+
+        for (AuthenticateRequest request : authenticateRequests) {
+            if (Objects.equal(request.getKeyHandle(), response.getKeyHandle())) {
                 return request;
             }
         }
-        throw new U2fException("Unknown keyHandle");
+        throw new U2fBadInputException("Responses keyHandle does not match any contained request");
     }
 
-    public String getKey() {
-        return Iterables.getFirst(authenticateRequests, null).getChallenge();
+    public String getRequestId() {
+        return authenticateRequests.get(0).getChallenge();
     }
 
-    public static AuthenticateRequestData fromJson(String json) {
-        return GSON.fromJson(json, AuthenticateRequestData.class);
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(authenticateRequests);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof AuthenticateRequestData))
+            return false;
+        AuthenticateRequestData other = (AuthenticateRequestData) obj;
+        return Objects.equal(authenticateRequests, other.authenticateRequests);
+    }
+
+    public static AuthenticateRequestData fromJson(String json) throws U2fBadInputException {
+        return fromJson(json, AuthenticateRequestData.class);
     }
 }

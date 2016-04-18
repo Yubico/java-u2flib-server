@@ -9,40 +9,52 @@
 
 package com.yubico.u2f.data.messages;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
-import com.yubico.u2f.data.messages.json.JsonObject;
+import com.yubico.u2f.data.messages.json.JsonSerializable;
 import com.yubico.u2f.data.messages.json.Persistable;
-import com.yubico.u2f.exceptions.U2fException;
+import com.yubico.u2f.exceptions.U2fBadInputException;
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class AuthenticateResponse extends JsonObject implements Persistable {
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class AuthenticateResponse extends JsonSerializable implements Persistable {
     private static final int MAX_SIZE = 20000;
 
     /* base64(client data) */
+    @JsonProperty
     private final String clientData;
 
+    @JsonIgnore
+    private transient ClientData clientDataRef;
+
     /* base64(raw response from U2F device) */
+    @JsonProperty
     private final String signatureData;
 
     /* keyHandle originally passed */
+    @JsonProperty
     private final String keyHandle;
 
-    private AuthenticateResponse() {
-        clientData = null;
-        signatureData = null;
-        keyHandle = null; // Gson requires a no-args constructor.
-    }
-
-    public AuthenticateResponse(String clientData, String signatureData, String keyHandle) {
+    @JsonCreator
+    public AuthenticateResponse(@JsonProperty("clientData") String clientData, @JsonProperty("signatureData") String signatureData, @JsonProperty("keyHandle") String keyHandle) throws U2fBadInputException {
         this.clientData = checkNotNull(clientData);
         this.signatureData = checkNotNull(signatureData);
         this.keyHandle = checkNotNull(keyHandle);
+        clientDataRef = new ClientData(clientData);
     }
 
-    public ClientData getClientData() throws U2fException {
-        return new ClientData(clientData);
+    @JsonIgnore
+    public ClientData getClientData() {
+        return clientDataRef;
     }
 
     public String getSignatureData() {
@@ -53,7 +65,7 @@ public class AuthenticateResponse extends JsonObject implements Persistable {
         return keyHandle;
     }
 
-    public String getKey() throws U2fException {
+    public String getRequestId() {
         return getClientData().getChallenge();
     }
 
@@ -72,8 +84,21 @@ public class AuthenticateResponse extends JsonObject implements Persistable {
                 && Objects.equal(signatureData, other.signatureData);
     }
 
-    public static AuthenticateResponse fromJson(String json) {
+    public static AuthenticateResponse fromJson(String json) throws U2fBadInputException {
         checkArgument(json.length() < MAX_SIZE, "Client response bigger than allowed");
-        return GSON.fromJson(json, AuthenticateResponse.class);
+        return fromJson(json, AuthenticateResponse.class);
+    }
+
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        try {
+            clientDataRef = new ClientData(clientData);
+        } catch (U2fBadInputException e) {
+            throw new IOException(e);
+        }
     }
 }

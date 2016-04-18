@@ -1,93 +1,62 @@
 == java-u2flib-server
-Serverside https://fidoalliance.org/specifications[U2F] library for Java (and other JVM languages). Provides functionality for registering
+Server-side https://developers.yubico.com/U2F[U2F] library for Java. Provides functionality for registering
 U2F devices and authenticate with said devices.
 
-NOTE: To learn about U2F and how to use a U2F library, visit
-http://developers.yubico.com/U2F[developers.yubico.com/U2F].
-
 === Dependency
-[source,xml]
+[source, xml]
  <dependency>
    <groupId>com.yubico</groupId>
    <artifactId>u2flib-server-core</artifactId>
-   <version>0.11.0</version>
+   <version>0.16.0</version>
  </dependency>
 
-=== API
-The library exposes the following methods in the `U2F` class:
+=== Example Usage
+NOTE: Make sure that you have read https://developers.yubico.com/U2F/Libraries/Using_a_library.html[Using a U2F library] before continuing.
 
-[source,java]
+[source, java]
 ----
-/**
-* Initiates the registration of a device.
-*
-* @param appId the U2F AppID. // <1>
-* @return a RegisterRequest, which should be sent to the client and temporary saved by
-* the server.
-*/
-public RegisterRequest startRegistration(String appId);
+@GET
+public View startAuthentication(String username) throws NoEligibleDevicesException {
 
-/**
-* Finishes a previously started registration.
-*
-* @param request
-* @param response the response from the device/client.
-* @return a DeviceRegistration. Servers should persist this.
-*/
-public void finishRegistration(
-	RegisterRequest request,
-	RegisterResponse response
-) throws U2fException;
+    // Generate a challenge for each U2F device that this user has registered
+    AuthenticateRequestData requestData
+        = u2f.startAuthentication(SERVER_ADDRESS, getRegistrations(username));
 
-/**
-* Initiates the authentication process.
-*
-* @param appId the U2F AppID. // <1>
-* @param the previously finished registration, for which to initiate authentication.
-* @return a AuthenticateRequest which should be sent to the client and temporary saved by
-* the server.
-*/
-public AuthenticateRequest startAuthentication(
-	String appId, 
-	DeviceRegistration registration
-);
+    // Store the challenges for future reference
+    requestStorage.put(requestData.getRequestId(), requestData.toJson());
 
-/**
-* Finishes a previously started authentication.
-*
-* @param authenticateRequest
-* @param response the response from the device/client.
-* @param the same registration that was passed to startAuthentication().
-*/
-public int finishAuthentication(
-	AuthenticateRequest request,
-	AuthenticateResponse response,
-	DeviceRegistration registration
-) throws U2fException;
+    // Return an HTML page containing the challenges
+    return new AuthenticationView(requestData.toJson(), username);
+}
+
+@POST
+public String finishAuthentication(AuthenticateResponse response, String username) throws 
+        DeviceCompromisedException {
+
+    // Get the challenges that we stored when starting the authentication
+    AuthenticateRequestData authenticateRequest
+        = requestStorage.remove(authenticateResponse.getRequestId());
+
+    // Verify the that the given response is valid for one of the registered devices
+    u2f.finishAuthentication(authenticateRequest,
+                             authenticateResponse, 
+                             getRegistrations(username));
+
+    return "Successfully authenticated!";
+}
 ----
-<1> The `appId` parameter is explained link:https://developers.yubico.com/U2F/App_ID.html[here].
 
+In the above example `getRegistrations()` returns the U2F devices currently associated with a given user.
+This is most likely stored in a database. 
+See link:u2flib-server-demo[`u2flib-server-demo`] for a complete demo server (including registration and storage of U2F devices).
+
+=== JavaDoc
 JavaDoc can be found at https://developers.yubico.com/java-u2flib-server[developers.yubico.com/java-u2flib-server].
 
+
+=== Attestation
+The attestation module (`u2flib-server-attestation`) enables you to restrict registrations to certain U2F devices (e.g. devices made by a specific vendor). It can also provide metadata for devices.
+
 === Serialization
-You have two options for serialization of relevant classes
-(RegisterRequest, AuthenticateRequest and DeviceRegistration):
-
- - Using their `toJson()` method.
- - Using Java's built in serialization mechanism (since they implement `java.io.Serializable`)
-
-
-=== Real world example
-See link:u2flib-server-demo[`u2flib-server-demo`]; a simple demo server, showcasing a real world example.
-
-=== Advanced topics
-
-==== Verifying attestation certificates.
-Attestation certificates can be verified like this:
-
-[source,java]
-----
-DeviceRegistration registration =
-	U2F.finishRegistration(request, response);
-registration.getAttestationCertificate().verify(VENDOR_CA);
-----
+All relevant classes implements `Serializable`, so instead of using `toJson()`, you can use Java's built in serialization mechanism.
+Internally the classes use Jackson to serialize to and from JSON, and the ObjectMapper from Jackson can be used.

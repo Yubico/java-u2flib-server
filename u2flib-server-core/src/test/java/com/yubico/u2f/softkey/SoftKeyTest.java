@@ -1,15 +1,16 @@
 package com.yubico.u2f.softkey;
 
-import com.yubico.u2f.U2F;
+import com.yubico.u2f.U2fPrimitives;
 import com.yubico.u2f.data.DeviceRegistration;
 import com.yubico.u2f.data.messages.AuthenticateRequest;
 import com.yubico.u2f.data.messages.AuthenticateResponse;
 import com.yubico.u2f.data.messages.ClientData;
 import com.yubico.u2f.data.messages.key.Client;
-import com.yubico.u2f.exceptions.U2fException;
+import com.yubico.u2f.data.messages.key.util.U2fB64Encoding;
+import com.yubico.u2f.exceptions.InvalidDeviceCounterException;
+import com.yubico.u2f.exceptions.U2fBadInputException;
 import com.yubico.u2f.testdata.AcmeKey;
 import com.yubico.u2f.testdata.GnubbyKey;
-import org.apache.commons.codec.binary.Base64;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -22,11 +23,11 @@ public class SoftKeyTest {
 
     public static final String APP_ID = "my-app";
 
-    private U2F u2f;
+    private U2fPrimitives u2f;
 
     @Before
     public void setup() {
-        u2f = new U2F();
+        u2f = new U2fPrimitives();
     }
 
     @Test
@@ -50,7 +51,7 @@ public class SoftKeyTest {
         assertEquals("CN=Gnubby Pilot", deviceRegistration.getAttestationCertificate().getIssuerDN().getName());
     }
 
-    @Test(expected = U2fException.class)
+    @Test(expected = U2fBadInputException.class)
     public void shouldVerifyAttestationCert() throws Exception {
         SoftKey key = new SoftKey(
                 new HashMap<String, KeyPair>(),
@@ -62,7 +63,7 @@ public class SoftKeyTest {
     }
 
     // Tests FIDO Security Measure [SM-15]
-    @Test(expected = U2fException.class)
+    @Test(expected = InvalidDeviceCounterException.class)
     public void shouldProtectAgainstClonedDevices() throws Exception {
         SoftKey key = new SoftKey();
         Client client = new Client(key);
@@ -76,8 +77,8 @@ public class SoftKeyTest {
         authenticateUsing(clientUsingClone, registeredDevice);
     }
 
-    @Test(expected = U2fException.class)
-    public void shouldVerifyKeySignatures() throws Exception {
+    @Test(expected = U2fBadInputException.class)
+     public void shouldVerifyChallenge() throws Exception {
 
         Client client = createClient();
 
@@ -96,12 +97,33 @@ public class SoftKeyTest {
     private String tamperChallenge(ClientData clientData) {
         byte[] rawClientData = clientData.asJson().getBytes();
         rawClientData[50] += 1;
-        return Base64.encodeBase64URLSafeString(rawClientData);
+        return U2fB64Encoding.encode(rawClientData);
+    }
+
+    @Test(expected = U2fBadInputException.class)
+    public void shouldVerifySignature() throws Exception {
+
+        Client client = createClient();
+
+        DeviceRegistration registeredDevice = client.register();
+
+        AuthenticateRequest authenticateRequest = u2f.startAuthentication(APP_ID, registeredDevice);
+        AuthenticateResponse originalResponse = client.authenticate(registeredDevice, authenticateRequest);
+        AuthenticateResponse tamperedResponse = new AuthenticateResponse(
+                U2fB64Encoding.encode(originalResponse.getClientData().asJson().getBytes()),
+                tamperSignature(originalResponse.getSignatureData()),
+                originalResponse.getKeyHandle()
+        );
+        u2f.finishAuthentication(authenticateRequest, tamperedResponse, registeredDevice);
+    }
+
+
+    private String tamperSignature(String signature) {
+        return signature.substring(0, 5) + "47" + signature.substring(7);
     }
 
     private Client createClient() {
-        SoftKey key = new SoftKey();
-        return new Client(key);
+        return new Client(new SoftKey());
     }
 
     private void authenticateUsing(Client client, DeviceRegistration registeredDevice) throws Exception {
