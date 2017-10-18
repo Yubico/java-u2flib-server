@@ -16,10 +16,20 @@ import com.yubico.gradle.plugins.signing.GpgSigningPlugin
 
 project.ext.publishEnabled = System.env.CI != 'true'
 
+def v_ossrhUsername="FOO"
+def v_ossrhPassword="BAR"
+
+if (project.hasProperty("ossrhUsername")) {
+  v_ossrhUsername = ossrhUsername
+}
+if (project.hasProperty("ossrhPassword")) {
+  v_ossrhPassword = ossrhPassword
+}
+
 if (publishEnabled) {
   nexusStaging {
-    username = ossrhUsername
-    password = ossrhPassword
+    username = v_ossrhUsername
+    password = v_ossrhPassword
     stagingProfileId = '6c61426e6529d'
   }
 }
@@ -99,11 +109,11 @@ subprojects {
           beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
           repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
-            authentication(userName: ossrhUsername, password: ossrhPassword)
+            authentication(userName: v_ossrhUsername, password: v_ossrhPassword)
           }
 
           snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots/') {
-            authentication(userName: ossrhUsername, password: ossrhPassword)
+            authentication(userName: v_ossrhUsername, password: v_ossrhPassword)
           }
 
           pom.project {
