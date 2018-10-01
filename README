@@ -1,5 +1,12 @@
 == java-u2flib-server
 
+_DEPRECATED: U2F will soon be superseded by https://www.w3.org/TR/webauthn/[Web
+Authentication], and this project will therefore be superseded by
+https://github.com/Yubico/java-webauthn-server/[java-webauthn-server]. We
+recommend using WebAuthn instead for new deployments. This project will receive
+necessary development until the release of WebAuthn, but will only receive bug
+fixes after WebAuthn is released._
+
 image:https://travis-ci.org/Yubico/java-u2flib-server.svg?branch=master["Build Status", link="https://travis-ci.org/Yubico/java-u2flib-server"]
 image:https://coveralls.io/repos/github/Yubico/java-u2flib-server/badge.svg["Coverage Status", link="https://coveralls.io/github/Yubico/java-u2flib-server"]
 
