@@ -5,7 +5,7 @@
 <script src="/assets/u2f-api-1.1.js"></script>
 
 <script>
-var request = ${data};
+var request = JSON.parse("${data?json_string?no_esc}");
 setTimeout(function() {
     u2f.register(
         request.appId,
