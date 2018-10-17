@@ -5,7 +5,7 @@
 <script src="/assets/u2f-api-1.1.js"></script>
 
 <script>
-var request = ${dataJson};
+var request = JSON.parse("${dataJson?json_string?no_esc}");
 setTimeout(function() {
 
     if (request.signRequests.length > 0) {
