@@ -1,6 +1,7 @@
 package com.yubico.u2f.data.messages.key.util;
 
 import com.google.common.io.BaseEncoding;
+import com.yubico.u2f.crypto.BouncyCastleCrypto;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.io.ByteArrayInputStream;
@@ -14,7 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class CertificateParser {
-    private static final Provider BC_PROVIDER = new BouncyCastleProvider();
+    private static final Provider BC_PROVIDER = new BouncyCastleCrypto().getProvider();
 
     private final static List<String> FIXSIG = Arrays.asList(
             "CN=Yubico U2F EE Serial 776137165",

@@ -22,8 +22,11 @@ import java.security.*;
 import java.security.cert.X509Certificate;
 
 public class BouncyCastleCrypto implements Crypto {
-    static {
-        Security.addProvider(new BouncyCastleProvider());
+
+    private static final Provider provider = new BouncyCastleProvider();
+
+    public Provider getProvider() {
+        return provider;
     }
 
     @Override
@@ -36,7 +39,7 @@ public class BouncyCastleCrypto implements Crypto {
     public void checkSignature(PublicKey publicKey, byte[] signedBytes, byte[] signature)
             throws U2fBadInputException {
         try {
-            Signature ecdsaSignature = Signature.getInstance("SHA256withECDSA");
+            Signature ecdsaSignature = Signature.getInstance("SHA256withECDSA", provider);
             ecdsaSignature.initVerify(publicKey);
             ecdsaSignature.update(signedBytes);
             if (!ecdsaSignature.verify(signature)) {
@@ -71,7 +74,7 @@ public class BouncyCastleCrypto implements Crypto {
                 throw new U2fBadInputException("Could not parse user public key", e);
             }
 
-            return KeyFactory.getInstance("ECDSA").generatePublic(
+            return KeyFactory.getInstance("ECDSA", provider).generatePublic(
                     new ECPublicKeySpec(point,
                             new ECParameterSpec(
                                     curve.getCurve(),
@@ -92,7 +95,7 @@ public class BouncyCastleCrypto implements Crypto {
     @Override
     public byte[] hash(byte[] bytes) {
         try {
-            return MessageDigest.getInstance("SHA-256").digest(bytes);
+            return MessageDigest.getInstance("SHA-256", provider).digest(bytes);
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
