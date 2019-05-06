@@ -1,3 +1,10 @@
+== Version 0.19.3 ==
+
+Bug fixes:
+
+* Use BouncyCastle security provider explicitly
+
+
 == Version 0.19.2 ==
 
 * Bumped Jackson dependency version to 2.9.8 which has patched CVE-2018-19360, CVE-2018-19362 and CVE-2018-19361
