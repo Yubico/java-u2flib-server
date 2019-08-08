@@ -1,3 +1,8 @@
+== Version 0.19.5 ==
+
+* Bumped Jackson dependency to version 2.9.9.2 which has patched CVE-2019-12814, CVE-2019-14439, CVE-2019-14379
+
+
 == Version 0.19.4 ==
 
 * Bumped Jackson dependency to version 2.9.9 which has patched CVE-2019-12086
