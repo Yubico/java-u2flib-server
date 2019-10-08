@@ -1,3 +1,8 @@
+== Version 0.19.7 ==
+
+* Bumped Jackson dependency to version 2.9.10 which has patched CVE-2019-16335, CVE-2019-14540
+
+
 == Version 0.19.6 ==
 
 * Bumped Jackson dependency to version 2.9.9.3 which fixes a regression in 2.9.9.2
