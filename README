@@ -19,14 +19,14 @@ Maven:
  <dependency>
    <groupId>com.yubico</groupId>
    <artifactId>u2flib-server-core</artifactId>
-   <version>0.19.7</version>
+   <version>0.19.8</version>
  </dependency>
 
 Gradle:
 [source, groovy]
  repositories{ mavenCentral() }
  dependencies {
-   compile 'com.yubico:u2flib-server-core:0.19.7'
+   compile 'com.yubico:u2flib-server-core:0.19.8'
  }
 
 === Example Usage
