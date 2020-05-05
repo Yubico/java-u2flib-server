@@ -9,7 +9,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.yubico.u2f.data.messages.json.JsonSerializable;
 import com.yubico.u2f.exceptions.U2fBadInputException;
@@ -24,9 +23,9 @@ import lombok.EqualsAndHashCode;
 public class MetadataObject extends JsonSerializable {
     private static final TypeReference<Map<String, String>> MAP_STRING_STRING_TYPE = new TypeReference<Map<String, String>>() {
     };
-    private static final TypeReference LIST_STRING_TYPE = new TypeReference<List<String>>() {
+    private static final TypeReference<List<String>> LIST_STRING_TYPE = new TypeReference<List<String>>() {
     };
-    private static final TypeReference LIST_JSONNODE_TYPE = new TypeReference<List<JsonNode>>() {
+    private static final TypeReference<List<JsonNode>> LIST_JSONNODE_TYPE = new TypeReference<List<JsonNode>>() {
     };
 
     private final transient JsonNode data;
