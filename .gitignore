@@ -15,6 +15,7 @@ out/
 # Maven
 log/
 target/
+*.versionsBackup
 
 # Gradle
 .gradle/
