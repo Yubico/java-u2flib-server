@@ -113,6 +113,11 @@ public class U2F {
                 public boolean apply(DeviceRegistration input) {
                     return Objects.equal(request.getKeyHandle(), input.getKeyHandle());
                 }
+
+                @Override
+                public boolean test(DeviceRegistration input) {
+                    return apply(input);
+                }
             });
 
             if (device.isCompromised()) {

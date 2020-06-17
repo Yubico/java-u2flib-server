@@ -3,7 +3,7 @@
     <parent>
         <artifactId>u2flib-server-parent</artifactId>
         <groupId>com.yubico</groupId>
-        <version>0.19.10</version>
+        <version>0.19.11</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -19,7 +19,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>19.0</version>
+            <version>[24.1.1,30)</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
