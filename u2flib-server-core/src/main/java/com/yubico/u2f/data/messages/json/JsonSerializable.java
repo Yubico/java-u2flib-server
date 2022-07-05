@@ -8,6 +8,11 @@ import com.yubico.u2f.exceptions.U2fBadInputException;
 
 import java.io.IOException;
 
+/**
+ * @deprecated The java-u2flib-server library is obsolete. Use <a
+ * href="https://developers.yubico.com/java-webauthn-server/">java-webauthn-server</a> instead.
+ */
+@Deprecated
 public abstract class JsonSerializable {
     protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 

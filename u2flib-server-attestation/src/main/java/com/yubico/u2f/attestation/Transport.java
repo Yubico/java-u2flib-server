@@ -6,7 +6,11 @@ import java.util.Set;
 
 /**
  * Created by Dain on 2016-02-18.
+ *
+ * @deprecated The java-u2flib-server library is obsolete. Use <a
+ * href="https://developers.yubico.com/java-webauthn-server/">java-webauthn-server</a> instead.
  */
+@Deprecated
 public enum Transport {
     BT_CLASSIC(1),
     BLE(2),

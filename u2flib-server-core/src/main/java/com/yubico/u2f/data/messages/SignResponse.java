@@ -24,6 +24,11 @@ import lombok.EqualsAndHashCode;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+/**
+ * @deprecated The java-u2flib-server library is obsolete. Use <a
+ * href="https://developers.yubico.com/java-webauthn-server/">java-webauthn-server</a> instead.
+ */
+@Deprecated
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode
 public class SignResponse extends JsonSerializable implements Persistable {

@@ -7,6 +7,11 @@ import com.yubico.u2f.attestation.DeviceMatcher;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 
+/**
+ * @deprecated The java-u2flib-server library is obsolete. Use <a
+ * href="https://developers.yubico.com/java-webauthn-server/">java-webauthn-server</a> instead.
+ */
+@Deprecated
 public class FingerprintMatcher implements DeviceMatcher {
     public static final String SELECTOR_TYPE = "fingerprint";
 

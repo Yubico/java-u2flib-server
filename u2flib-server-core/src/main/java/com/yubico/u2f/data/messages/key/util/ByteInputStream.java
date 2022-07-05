@@ -13,7 +13,11 @@ import java.io.IOException;
 
 /**
  * Provides an easy way to read a byte array in chunks.
+ *
+ * @deprecated The java-u2flib-server library is obsolete. Use <a
+ * href="https://developers.yubico.com/java-webauthn-server/">java-webauthn-server</a> instead.
  */
+@Deprecated
 public class ByteInputStream extends DataInputStream {
 
     public ByteInputStream(byte[] data) {

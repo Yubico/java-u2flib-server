@@ -25,6 +25,11 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import lombok.EqualsAndHashCode;
 
+/**
+ * @deprecated The java-u2flib-server library is obsolete. Use <a
+ * href="https://developers.yubico.com/java-webauthn-server/">java-webauthn-server</a> instead.
+ */
+@Deprecated
 @EqualsAndHashCode(of = { "keyHandle", "publicKey", "attestationCert" })
 public class DeviceRegistration extends JsonSerializable implements Serializable {
     private static final long serialVersionUID = -142942195464329902L;

@@ -23,7 +23,11 @@ import lombok.EqualsAndHashCode;
 /**
  * The sign response produced by the token/key, which is transformed by the client into an
  * {@link SignResponse} and sent to the server.
+ *
+ * @deprecated The java-u2flib-server library is obsolete. Use <a
+ * href="https://developers.yubico.com/java-webauthn-server/">java-webauthn-server</a> instead.
  */
+@Deprecated
 @EqualsAndHashCode(of = { "userPresence", "counter", "signature" })
 public class RawSignResponse {
     public static final byte USER_PRESENT_FLAG = 0x01;

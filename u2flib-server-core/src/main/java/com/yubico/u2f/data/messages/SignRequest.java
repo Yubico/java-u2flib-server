@@ -20,6 +20,11 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 
+/**
+ * @deprecated The java-u2flib-server library is obsolete. Use <a
+ * href="https://developers.yubico.com/java-webauthn-server/">java-webauthn-server</a> instead.
+ */
+@Deprecated
 @Value
 @Builder
 @JsonDeserialize(builder = SignRequest.SignRequestBuilder.class)

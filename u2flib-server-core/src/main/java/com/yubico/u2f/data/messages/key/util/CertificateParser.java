@@ -14,6 +14,11 @@ import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * @deprecated The java-u2flib-server library is obsolete. Use <a
+ * href="https://developers.yubico.com/java-webauthn-server/">java-webauthn-server</a> instead.
+ */
+@Deprecated
 public class CertificateParser {
     private static final Provider BC_PROVIDER = new BouncyCastleCrypto().getProvider();
 

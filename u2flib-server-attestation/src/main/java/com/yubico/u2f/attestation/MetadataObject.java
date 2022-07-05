@@ -18,6 +18,11 @@ import java.util.List;
 import java.util.Map;
 import lombok.EqualsAndHashCode;
 
+/**
+ * @deprecated The java-u2flib-server library is obsolete. Use <a
+ * href="https://developers.yubico.com/java-webauthn-server/">java-webauthn-server</a> instead.
+ */
+@Deprecated
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(of = { "data" })
 public class MetadataObject extends JsonSerializable {

@@ -21,6 +21,11 @@ import org.bouncycastle.math.ec.ECPoint;
 import java.security.*;
 import java.security.cert.X509Certificate;
 
+/**
+ * @deprecated The java-u2flib-server library is obsolete. Use <a
+ * href="https://developers.yubico.com/java-webauthn-server/">java-webauthn-server</a> instead.
+ */
+@Deprecated
 public class BouncyCastleCrypto implements Crypto {
 
     private static final Provider provider = new BouncyCastleProvider();
