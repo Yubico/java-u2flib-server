@@ -9,6 +9,11 @@ import org.bouncycastle.util.Strings;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 
+/**
+ * @deprecated The java-u2flib-server library is obsolete. Use <a
+ * href="https://developers.yubico.com/java-webauthn-server/">java-webauthn-server</a> instead.
+ */
+@Deprecated
 public class ExtensionMatcher implements DeviceMatcher {
     public static final String SELECTOR_TYPE = "x509Extension";
 

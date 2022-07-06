@@ -14,6 +14,11 @@ import com.yubico.u2f.exceptions.U2fBadInputException;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 
+/**
+ * @deprecated The java-u2flib-server library is obsolete. Use <a
+ * href="https://developers.yubico.com/java-webauthn-server/">java-webauthn-server</a> instead.
+ */
+@Deprecated
 public interface Crypto {
     void checkSignature(X509Certificate attestationCertificate, byte[] signedBytes,
                         byte[] signature) throws U2fBadInputException;

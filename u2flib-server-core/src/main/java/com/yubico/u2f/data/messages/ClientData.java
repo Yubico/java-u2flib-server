@@ -12,6 +12,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Set;
 
+/**
+ * @deprecated The java-u2flib-server library is obsolete. Use <a
+ * href="https://developers.yubico.com/java-webauthn-server/">java-webauthn-server</a> instead.
+ */
+@Deprecated
 public class ClientData {
 
     private static final String TYPE_PARAM = "typ";

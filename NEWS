@@ -1,3 +1,9 @@
+== Version 0.19.12 ==
+
+* Deprecated all classes with note that the library is obsolete. This is planned
+  to be the final release of java-u2flib-server.
+
+
 == Version 0.19.11 ==
 
 * Bumped Guava dependency to version [24.1.1,30) in response to CVE-2018-10237

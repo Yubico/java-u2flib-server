@@ -12,6 +12,11 @@ import com.yubico.u2f.exceptions.U2fBadInputException;
 import java.util.List;
 import lombok.EqualsAndHashCode;
 
+/**
+ * @deprecated The java-u2flib-server library is obsolete. Use <a
+ * href="https://developers.yubico.com/java-webauthn-server/">java-webauthn-server</a> instead.
+ */
+@Deprecated
 @EqualsAndHashCode
 public class RegisterRequestData extends JsonSerializable implements Persistable {
 

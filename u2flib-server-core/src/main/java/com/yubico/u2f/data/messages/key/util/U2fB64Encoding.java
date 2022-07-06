@@ -3,6 +3,11 @@ package com.yubico.u2f.data.messages.key.util;
 import com.google.common.io.BaseEncoding;
 import com.yubico.u2f.exceptions.U2fBadInputException;
 
+/**
+ * @deprecated The java-u2flib-server library is obsolete. Use <a
+ * href="https://developers.yubico.com/java-webauthn-server/">java-webauthn-server</a> instead.
+ */
+@Deprecated
 public class U2fB64Encoding {
     private final static BaseEncoding BASE64_ENCODER = BaseEncoding.base64Url().omitPadding();
     private final static BaseEncoding BASE64_DECODER = BaseEncoding.base64Url();

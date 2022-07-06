@@ -12,6 +12,11 @@ import java.util.Map;
 import java.util.Set;
 import lombok.Getter;
 
+/**
+ * @deprecated The java-u2flib-server library is obsolete. Use <a
+ * href="https://developers.yubico.com/java-webauthn-server/">java-webauthn-server</a> instead.
+ */
+@Deprecated
 @Getter
 public class Attestation implements Serializable {
     private final String metadataIdentifier;

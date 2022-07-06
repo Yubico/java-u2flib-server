@@ -1,10 +1,9 @@
 == java-u2flib-server
 
-_DEPRECATED: U2F has been superseded by https://www.w3.org/TR/webauthn/[Web
-Authentication], and this project is superseded by
-https://github.com/Yubico/java-webauthn-server/[java-webauthn-server]. We
-recommend using WebAuthn instead for new deployments. This project will only
-receive bug fixes, and will not be developed further._
+NOTE: _OBSOLETE: This project is no longer maintained.
+U2F has been superseded by https://www.w3.org/TR/webauthn/[Web Authentication],
+and this project is superseded by https://github.com/Yubico/java-webauthn-server/[java-webauthn-server].
+We recommend using WebAuthn instead._
 
 image:https://travis-ci.org/Yubico/java-u2flib-server.svg?branch=master["Build Status", link="https://travis-ci.org/Yubico/java-u2flib-server"]
 image:https://coveralls.io/repos/github/Yubico/java-u2flib-server/badge.svg["Coverage Status", link="https://coveralls.io/github/Yubico/java-u2flib-server"]
@@ -19,14 +18,14 @@ Maven:
  <dependency>
    <groupId>com.yubico</groupId>
    <artifactId>u2flib-server-core</artifactId>
-   <version>0.19.9</version>
+   <version>0.19.12</version>
  </dependency>
 
 Gradle:
 [source, groovy]
  repositories{ mavenCentral() }
  dependencies {
-   compile 'com.yubico:u2flib-server-core:0.19.9'
+   compile 'com.yubico:u2flib-server-core:0.19.12'
  }
 
 === Example Usage

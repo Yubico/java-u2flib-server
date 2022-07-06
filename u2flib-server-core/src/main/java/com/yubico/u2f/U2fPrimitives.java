@@ -29,6 +29,11 @@ import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+/**
+ * @deprecated The java-u2flib-server library is obsolete. Use <a
+ * href="https://developers.yubico.com/java-webauthn-server/">java-webauthn-server</a> instead.
+ */
+@Deprecated
 public class U2fPrimitives {
 
     private static final String SIGN_TYPE = "navigator.id.getAssertion";

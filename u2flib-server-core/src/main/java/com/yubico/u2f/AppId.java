@@ -7,6 +7,11 @@ import com.yubico.u2f.exceptions.U2fBadInputException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+/**
+ * @deprecated The java-u2flib-server library is obsolete. Use <a
+ * href="https://developers.yubico.com/java-webauthn-server/">java-webauthn-server</a> instead.
+ */
+@Deprecated
 public class AppId {
 
     public static final String DISABLE_INSTRUCTIONS = "To disable this check, instantiate the U2F object using U2F.withoutAppIdValidation()";

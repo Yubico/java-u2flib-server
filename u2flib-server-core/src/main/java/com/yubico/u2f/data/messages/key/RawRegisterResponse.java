@@ -26,7 +26,11 @@ import lombok.EqualsAndHashCode;
 /**
  * The register response produced by the token/key, which is transformed by the client into an RegisterResponse
  * and sent to the server.
+ *
+ * @deprecated The java-u2flib-server library is obsolete. Use <a
+ * href="https://developers.yubico.com/java-webauthn-server/">java-webauthn-server</a> instead.
  */
+@Deprecated
 @EqualsAndHashCode
 public class RawRegisterResponse {
     public static final byte REGISTRATION_RESERVED_BYTE_VALUE = (byte) 0x05;

@@ -20,6 +20,11 @@ import com.yubico.u2f.exceptions.U2fBadInputException;
 import com.yubico.u2f.exceptions.U2fRegistrationException;
 import java.util.Set;
 
+/**
+ * @deprecated The java-u2flib-server library is obsolete. Use <a
+ * href="https://developers.yubico.com/java-webauthn-server/">java-webauthn-server</a> instead.
+ */
+@Deprecated
 public class U2F {
 
     private final ChallengeGenerator challengeGenerator;
